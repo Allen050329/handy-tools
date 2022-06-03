@@ -7,25 +7,23 @@ from multiprocessing.dummy import Pool as ThreadPool
 def crop(image):
     img = Image.open(f"{image}")  
     x, y = img.size
-
-    sample = 8
-
-    for i in range(sample):
-        matrix = int(min(x,y)*7/8)
-        x1 = randrange(0, x - matrix)
-        y1 = randrange(0, y - matrix)
+    z = min(x,y)
+    try:
+        assert z >= 256
+        matrix = int(z)
+        x1 = int((x-z)/2)
+        y1 = int((y-z)/2)
         k = img.crop((x1, y1, x1 + matrix, y1 + matrix))
-        k = k.resize([256,256])
-        k.save(f"L{image.split('/')[1]}/style/{image.split('/')[3].split('.')[0]}-{i}.png", format="png")
+        k = k.resize([256,256],Image.LANCZOS)
+        k.save(f"L{image.split('/')[1]}/style/{image.split('/')[3].split('.')[0]}-c.png", format="png")
+    except Exception:
+        os.system(f"rm -rf {image}")
+        pass
 
 def ac(i):
     print(f"starting thread {i}")
     for filename in glob.glob(f"./{i}/style/*"):
-        try:
-            crop(filename)
-        except Exception:
-            print(filename)
-            continue
+        crop(filename)
     print(f"thread {i} done")
 
 t =[]
